@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Seguimos un archivo desde sus bytes hasta su recuperación. Descubrimos por qué identificar, conservar y publicar son decisiones distintas.">
+<meta name="color-scheme" content="dark">
+<title>Lab 15 · IPFS + Pinata | Web3 Labs</title>
+<link rel="stylesheet" href="style.css">
+<script type="module" src="script.js">
+</script>
+</head>
+<body class="lab-15">
+<a class="skip-link" href="#introduccion">Saltar al contenido</a>
+<header class="navbar">
+<a class="brand" href="../index.html">
+<span class="brand-orbit">◉</span> CONTENT / SPACE</a>
+<nav aria-label="Navegación del laboratorio">
+<a href="#desarrollo">Desarrollo</a>
+<a href="#interactivo">Explorar</a>
+<a href="#resultados">Resultados</a>
+<a href="README.md">README ↗</a>
+</nav>
+<span class="nav-code">L15 / S18</span>
+</header>
+<main>
+<header class="hero">
+<div class="hero-copy">
+<p class="eyebrow">LABORATORIO 15 <span>SESIÓN 18</span>
+</p>
+<h1>El contenido<br>es la <em>dirección.</em>
+</h1>
+<p class="hero-description">Seguimos un archivo desde sus bytes hasta su recuperación. Descubrimos por qué identificar, conservar y publicar son decisiones distintas.</p>
+<div class="hero-meta">
+<span>IPFS / CIDv1 / Pinata / HTTP</span>
+<span>Informe académico interactivo</span>
+</div>
+<a class="hero-link" href="#interactivo">Explorar la ruta del archivo <span aria-hidden="true">↘</span>
+</a>
+</div>
+<div class="hero-art">
+<div class="space-art">
+<div class="orbit orbit-one">
+</div>
+<div class="orbit orbit-two">
+</div>
+<div class="orbit orbit-three">
+</div>
+<div class="space-core">
+<span>JSON</span>
+<strong>CONTENT<br>ADDRESSED</strong>
+</div>
+<span class="satellite sat-a">CID</span>
+<span class="satellite sat-b">PIN</span>
+<span class="satellite sat-c">HTTP</span>
+<div class="space-caption">UNA IDENTIDAD · MÚLTIPLES UBICACIONES</div>
+</div>
+</div>
+<div class="hero-footer">
+<span>CID + PIN + RESOLVE</span>
+<span>HTML · CSS · JavaScript</span>
+</div>
+</header>
+<div class="report-layout">
+<aside class="chapter-nav" aria-label="Índice del informe">
+<span>EN ESTE INFORME</span>
+<a href="#introduccion">01 / Contexto</a>
+<a href="#instrucciones">02 / Instrucciones</a>
+<a href="#objetivos">03 / Objetivos</a>
+<a href="#tecnologias">04 / Tecnologías</a>
+<a href="#desarrollo">05 / Desarrollo</a>
+<a href="#interactivo">06 / Interacción</a>
+<a href="#resultados">07 / Resultados</a>
+<a href="#analisis">08 / Análisis crítico</a>
+<a href="#rubrica">09 / Rúbrica</a>
+<a href="#conclusiones">10 / Conclusiones</a>
+<a href="#aprendizajes">11 / Aprendizajes</a>
+</aside>
+<div class="report">
+<section id="introduccion" class="report-section " aria-labelledby="introduccion-title">
+<div class="section-heading">
+<span class="section-index">introduccion</span>
+<h2 id="introduccion-title">Introducción</h2>
+</div>
+<p>El almacenamiento convencional suele indicar dónde buscar un archivo: una ruta, un servidor y un nombre. Esa referencia puede conservarse aunque el contenido cambie. En almacenamiento por contenido, la identidad se vincula con una representación criptográfica de los bytes. Analizamos cómo esa diferencia permite verificar integridad y compartir datos sin depender de una única ubicación.</p>
+<p>Un venture necesita decidir qué publica y quién lo conserva antes de elegir un gateway. La descentralización de la resolución no vuelve privados los datos ni crea una obligación de permanencia. Desarrollamos una política aplicada a documentos públicos, registros operativos y secretos, y presentamos un cálculo local reproducible para distinguir el identificador de un servicio de almacenamiento.</p>
+</section>
+<section id="instrucciones" class="report-section instructions" aria-labelledby="instrucciones-title">
+<div class="section-heading">
+<span class="section-index">instrucciones</span>
+<h2 id="instrucciones-title">Instrucciones del laboratorio</h2>
+</div>
+<p>En este laboratorio trabajamos en Visual Studio Code para desarrollar un informe sobre almacenamiento descentralizado utilizando un archivo venture-hello.json sin datos personales y una política de almacenamiento aplicada a un venture. Definimos una representación exacta en UTF-8, calculamos su SHA-256 y construimos un CIDv1 con codec raw para un único bloque pequeño, dejando explícito que este cálculo local no equivale a una publicación en IPFS. Explicamos el procedimiento de incorporación del archivo con IPFS, la relación entre bloques, multihash y direccionamiento por contenido, y la necesidad de mantener parámetros consistentes para obtener identificadores reproducibles. Describimos cómo Pinata conserva una copia mediante pinning y cómo un gateway HTTP recupera contenido identificado por CID, diferenciando respuestas ilustrativas de una consulta realmente ejecutada. Implementamos una experiencia interactiva que recorre archivo, CID, Pinata y gateway, compara dos variantes predefinidas del JSON y verifica los bytes del archivo local recuperado. Elaboramos STORAGE.md con categorías de sensibilidad, responsables, durabilidad, revisión y eliminación, distinguiendo materiales apropiados para publicación pública de información que requiere almacenamiento convencional. Analizamos disponibilidad, persistencia, dependencia del proveedor y los límites de retirar copias distribuidas. Entregamos el HTML, CSS, JavaScript, JSON y README correspondientes, con diagramas, matriz de clasificación, resultados calculados en el navegador y conclusiones sobre integridad y gobierno de datos.</p>
+</section>
+<section id="objetivos" class="report-section " aria-labelledby="objetivos-title">
+<div class="section-heading">
+<span class="section-index">objetivos</span>
+<h2 id="objetivos-title">Objetivos</h2>
+</div>
+<div class="concept-grid">
+<article class="concept-card">
+<h3>Identidad reproducible</h3>
+<p>Relacionamos bytes, codificación, hash, codec y CID. Comparamos una modificación mínima con el objeto original para observar cómo cambia la identidad.</p>
+</article>
+<article class="concept-card">
+<h3>Disponibilidad operativa</h3>
+<p>Distinguimos un identificador válido de un archivo servido. Analizamos copias, pinning, financiación y dependencia de gateways.</p>
+</article>
+<article class="concept-card">
+<h3>Gobierno de publicación</h3>
+<p>Clasificamos contenidos según sensibilidad y durabilidad. Elegimos almacenamiento de acuerdo con el derecho a retirar datos y la finalidad del venture.</p>
+</article>
+</div>
+</section>
+<section id="tecnologias" class="report-section " aria-labelledby="tecnologias-title">
+<div class="section-heading">
+<span class="section-index">tecnologias</span>
+<h2 id="tecnologias-title">Tecnologías utilizadas</h2>
+</div>
+<div class="concept-grid">
+<article class="concept-card">
+<h3>IPFS</h3>
+<p>Organiza y transfiere bloques identificados por contenido. El CID describe una representación y permite verificar el bloque que se recibe; no indica un servidor fijo.</p>
+</article>
+<article class="concept-card">
+<h3>Pinata</h3>
+<p>Actúa como servicio gestionado para mantener archivos disponibles. El estado de pinning pertenece al servicio y debe observarse independientemente de tener un CID.</p>
+</article>
+<article class="concept-card">
+<h3>Gateway HTTP</h3>
+<p>Permite acceder desde un navegador convencional. Traduce una solicitud por contenido a una respuesta web y participa en el rendimiento, disponibilidad y observabilidad del acceso.</p>
+</article>
+<article class="concept-card">
+<h3>Web Crypto</h3>
+<p>Utilizamos SHA-256 del navegador para cálculos locales. TextEncoder convierte las cadenas a UTF-8 y un codificador base32 expresa los bytes del CIDv1.</p>
+</article>
+</div>
+</section>
+<section id="desarrollo" class="report-section " aria-labelledby="desarrollo-title">
+<div class="section-heading">
+<span class="section-index">desarrollo</span>
+<h2 id="desarrollo-title">Desarrollo del laboratorio</h2>
+</div>
+<article class="subsection">
+<h3>01 / Fijar el objeto y sus bytes</h3>
+<p>El archivo de ejemplo contiene únicamente un saludo, el nombre ficticio de un venture y una versión. No incluye personas, contactos, documentos de identidad ni identificadores de clientes. La representación elegida es compacta, UTF-8 sin BOM y sin salto de línea final. Esos detalles forman parte del experimento porque el hash opera sobre bytes y no sobre una interpretación visual del JSON.</p>
+<figure class="code-block">
+<figcaption>
+<span>venture-hello.json · archivo real incluido</span>
+<span>JSON</span>
+</figcaption>
+<pre>
+<code data-language="JSON">{"venture":"Aurora","mensaje":"Hola, Web3","version":1}</code>
+</pre>
+</figure>
+<p>Dos documentos con las mismas propiedades pueden producir hashes diferentes si cambia el orden de las claves, la sangría o un salto de línea. La igualdad semántica de JSON no asegura igualdad binaria. Para nuestros resultados comparamos los bytes exactos del archivo incluido con una cadena canónica declarada en el código, evitando depender de cómo un editor reformatea la vista.</p>
+</article>
+<article class="subsection">
+<h3>02 / Construir y entender el CID</h3>
+<p>La representación usada en esta demostración es un único bloque raw pequeño. Construimos CIDv1 con los bytes 0x01 para versión, 0x55 para codec raw y el multihash 0x12 0x20 para SHA-256 de treinta y dos bytes. La forma textual agrega el prefijo b de base32. Es un CID calculado realmente sobre el fixture local; no afirmamos que otros nodos posean ese bloque.</p>
+<figure class="code-block">
+<figcaption>
+<span>Cálculo local · esquema reducido</span>
+<span>JavaScript</span>
+</figcaption>
+<pre>
+<code data-language="JavaScript">const bytes = new TextEncoder().encode(original);
+const digest = new Uint8Array(
+  await crypto.subtle.digest('SHA-256', bytes)
+);
+const cidBytes = new Uint8Array([1, 0x55, 0x12, 32, ...digest]);
+// base32 codifica sin padding; "b" identifica la base.
+const cid = 'b' + base32(cidBytes);</code>
+</pre>
+</figure>
+<p>Para un archivo grande o una raíz UnixFS, el multihash suele describir el bloque raíz del DAG, no el hash directo de todo el archivo. El codec, la división en bloques y el formato importan. Mantener contenido y parámetros de importación es parte de la reproducibilidad. Esta distinción está documentada en <a href="https://docs.ipfs.tech/concepts/content-addressing/" target="_blank" rel="noopener">IPFS: identificadores de contenido</a>.</p>
+</article>
+<figure class="diagram">
+<div class="flow">
+<div class="flow-node">
+<span class="node-index">01</span>
+<strong>b</strong>
+<small>Representación base32</small>
+</div>
+<span class="flow-arrow" aria-hidden="true">→</span>
+<div class="flow-node">
+<span class="node-index">02</span>
+<strong>01 + 55</strong>
+<small>Versión 1 y codec raw</small>
+</div>
+<span class="flow-arrow" aria-hidden="true">→</span>
+<div class="flow-node">
+<span class="node-index">03</span>
+<strong>12 + 20</strong>
+<small>SHA-256 y longitud</small>
+</div>
+<span class="flow-arrow" aria-hidden="true">→</span>
+<div class="flow-node">
+<span class="node-index">04</span>
+<strong>Digest</strong>
+<small>32 bytes del bloque</small>
+</div>
+</div>
+<figcaption>Anatomía del CIDv1 raw utilizado en esta página.</figcaption>
+</figure>
+<article class="subsection">
+<h3>03 / Incorporar, conservar y resolver</h3>
+<p>En un nodo IPFS local, el procedimiento de referencia incorpora el archivo pequeño con parámetros explícitos. Si conserva los mismos bytes y produce una única hoja raw como raíz, el CID coincide con el cálculo de esta página. No ejecutamos estos comandos en una red IPFS en esta entrega: mostramos el procedimiento completo y explicamos cómo leer su salida.</p>
+<figure class="code-block">
+<figcaption>
+<span>Procedimiento de referencia · IPFS local</span>
+<span>Shell</span>
+</figcaption>
+<pre>
+<code data-language="Shell"># Archivo pequeño, sin directorio contenedor.
+ipfs add --cid-version=1 --raw-leaves=true venture-hello.json
+# Mantener el bloque localmente una vez identificado.
+ipfs pin add "$CID"
+ipfs pin ls "$CID"
+# La descarga de referencia conserva bytes, no una vista JSON.
+curl --fail --location "$GATEWAY/ipfs/$CID" --output recuperado.json</code>
+</pre>
+</figure>
+<p>El pin local protege de la recolección de basura de ese nodo. Un servicio remoto agrega otra responsabilidad de conservación. En Pinata se selecciona almacenamiento público IPFS, se carga el mismo archivo y se comprueba el CID y el estado de disponibilidad informado por el servicio. Un identificador de carga, la aceptación de una solicitud y una recuperación correcta son estados distintos. Ningún token de API forma parte de los archivos de esta web.</p>
+<p>La solicitud de gateway utiliza la ruta /ipfs/CID o un subdominio equivalente. Un HTTP 200 indicaría una respuesta exitosa, pero no demuestra por sí solo que los bytes sean correctos. Un error puede reflejar demora de descubrimiento, ausencia de proveedores, límites del gateway o contenido no disponible. Verificar el digest permite separar integridad del funcionamiento del transporte.</p>
+</article>
+<figure class="code-block">
+<figcaption>
+<span>Respuesta de gateway · salida ilustrativa, sin consulta remota</span>
+<span>HTTP</span>
+</figcaption>
+<pre>
+<code data-language="HTTP">HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"venture":"Aurora","mensaje":"Hola, Web3","version":1}</code>
+</pre>
+</figure>
+<article class="subsection">
+<h3>04 / Aplicar STORAGE.md</h3>
+<p>Nuestro venture ficticio publica manuales y demostraciones que toleran replicación pública. Conserva contratos de clientes y registros internos en almacenamiento con control de acceso, vencimientos y auditoría. Excluye secretos y datos personales de cualquier publicación permanente. La clasificación es una decisión previa: cifrar un documento no garantiza borrado futuro cuando un tercero conserva el ciphertext y eventualmente obtiene la clave.</p>
+<div class="table-scroll">
+<table>
+<caption>Matriz de almacenamiento aplicada al venture</caption>
+<thead>
+<tr>
+<th scope="col">Clase</th>
+<th scope="col">Ejemplo</th>
+<th scope="col">Destino</th>
+<th scope="col">Durabilidad / responsable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">Público y estable</th>
+<td>Manual técnico y JSON de prueba</td>
+<td>IPFS público con pinning</td>
+<td>Revisión semestral / documentación</td>
+</tr>
+<tr>
+<th scope="row">Público y temporal</th>
+<td>Anuncio con vigencia breve</td>
+<td>Web convencional</td>
+<td>Vence al terminar campaña / comunicación</td>
+</tr>
+<tr>
+<th scope="row">Interno o personal</th>
+<td>Expedientes de clientes</td>
+<td>Almacenamiento privado con acceso</td>
+<td>Plazo justificado / responsable de datos</td>
+</tr>
+<tr>
+<th scope="row">Secreto</th>
+<td>Credenciales y claves privadas</td>
+<td>Gestor de secretos</td>
+<td>Rotación y revocación / seguridad</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>STORAGE.md establece dos copias para documentos públicos estables, comprobaciones periódicas de recuperación y presupuesto de conservación. La duración de un pin comercial depende de la cuenta y las condiciones contratadas. Eliminar un pin reduce nuestra participación en la conservación; no envía una orden de borrado a nodos ajenos ni retira capturas, cachés o copias descargadas.</p>
+</article>
+</section>
+<section id="interactivo" class="report-section interactive-section" aria-labelledby="interactivo-title">
+<div class="section-heading">
+<span class="section-index">interactivo</span>
+<h2 id="interactivo-title">Una ruta, cuatro decisiones</h2>
+</div>
+<p class="note">SHA-256 y CID se calculan realmente en tu navegador. El flujo de Pinata y gateway es un modelo didáctico; no realiza solicitudes a servicios externos.</p>
+<div class="ipfs-lab">
+<div class="pipeline" role="group" aria-label="Etapas del almacenamiento">
+<button data-stage="0" aria-pressed="true">01<br>Archivo</button>
+<span aria-hidden="true">→</span>
+<button data-stage="1" aria-pressed="false">02<br>CID</button>
+<span aria-hidden="true">→</span>
+<button data-stage="2" aria-pressed="false">03<br>Pinata</button>
+<span aria-hidden="true">→</span>
+<button data-stage="3" aria-pressed="false">04<br>Gateway</button>
+</div>
+<div class="stage-readout" aria-live="polite">
+<h3 id="stage-title">Archivo / bytes exactos</h3>
+<p id="stage-text">La codificación y los saltos de línea forman parte del contenido.</p>
+</div>
+<div class="variant-controls" role="group" aria-label="Variante de archivo">
+<button data-variant="original" aria-pressed="true">JSON original</button>
+<button data-variant="modificado" aria-pressed="false">Cambiar versión a 2</button>
+</div>
+<pre class="data-output">
+<code id="json-output">Calculando representación local…</code>
+</pre>
+<dl class="hash-results">
+<dt>SHA-256 calculado</dt>
+<dd id="hash-output">Cálculo en curso</dd>
+<dt>CIDv1 raw calculado</dt>
+<dd id="cid-output">Cálculo en curso</dd>
+<dt>Comparación con archivo local</dt>
+<dd id="comparison-output" aria-live="polite">Leyendo venture-hello.json…</dd>
+</dl>
+<button id="pin-toggle" aria-pressed="true">Modelo: pin activo</button>
+<p id="pin-output" aria-live="polite">Una copia retenida aumenta disponibilidad. No garantiza permanencia universal.</p>
+</div>
+</section>
+<section id="resultados" class="report-section " aria-labelledby="resultados-title">
+<div class="section-heading">
+<span class="section-index">resultados</span>
+<h2 id="resultados-title">Resultados e interpretación</h2>
+</div>
+<p>La página calcula SHA-256 del documento y un CIDv1 raw válido para esos bytes. Además recupera venture-hello.json desde el mismo Live Server y compara su contenido binario con el objeto declarado. Esa recuperación es local y verificable; no se presenta como descarga desde Pinata. Al elegir versión 2 cambia un byte relevante del JSON y obtenemos un hash y un CID diferentes.</p>
+<p>El resultado prueba la relación entre bytes e identidad dentro del codec elegido. No prueba que un proveedor haya almacenado el objeto. La respuesta HTTP ilustrativa muestra la estructura esperada de un gateway, mientras que el control de pin explica por qué una copia administrada ayuda a la disponibilidad. Mantener ese límite permite interpretar correctamente tanto una comprobación exitosa como una falla de transporte.</p>
+<figure class="diagram">
+<div class="flow">
+<div class="flow-node">
+<span class="node-index">01</span>
+<strong>Integridad</strong>
+<small>¿Recibimos los bytes esperados?</small>
+</div>
+<span class="flow-arrow" aria-hidden="true">→</span>
+<div class="flow-node">
+<span class="node-index">02</span>
+<strong>Disponibilidad</strong>
+<small>¿Existe una copia accesible ahora?</small>
+</div>
+<span class="flow-arrow" aria-hidden="true">→</span>
+<div class="flow-node">
+<span class="node-index">03</span>
+<strong>Persistencia</strong>
+<small>¿Quién sostiene esa copia mañana?</small>
+</div>
+</div>
+<figcaption>Tres preguntas independientes para interpretar un resultado.</figcaption>
+</figure>
+</section>
+<section id="analisis" class="report-section " aria-labelledby="analisis-title">
+<div class="section-heading">
+<span class="section-index">analisis</span>
+<h2 id="analisis-title">Análisis crítico</h2>
+</div>
+<article class="subsection">
+<h3>Publicación y eliminación</h3>
+<p>El contenido público puede ser descubierto, copiado y redistribuido. Eliminar nuestro archivo local y cancelar un servicio no recupera las copias de terceros. El riesgo aumenta cuando un dato adquiere significado más tarde: un alias inocuo puede vincularse con una persona mediante otra base. Por ello excluimos datos personales incluso cuando el ejercicio solo necesita una demostración pequeña.</p>
+</article>
+<article class="subsection">
+<h3>Dependencia operacional</h3>
+<p>Un gateway mejora usabilidad pero incorpora observación de solicitudes, políticas de acceso y límites propios. La aplicación puede prever gateways alternativos y verificar contenido, aunque eso requiere diseño explícito. También conviene reconocer que el pinning puede concentrarse en pocos proveedores: una arquitectura distribuida puede tener una operación frágil si depende de una sola cuenta. Nuestro diseño combina clasificación previa, copias y comprobaciones de recuperación en lugar de asumir disponibilidad por la existencia de un CID.</p>
+</article>
+</section>
+<section id="rubrica" class="report-section " aria-labelledby="rubrica-title">
+<div class="section-heading">
+<span class="section-index">rubrica</span>
+<h2 id="rubrica-title">Rúbrica de evaluación</h2>
+</div>
+<p class="note">Criterios y porcentajes originales proporcionados para este laboratorio. La columna de alcance describe lo presentado, sin asignar una calificación ni acreditar ejecuciones externas.</p>
+<div class="table-scroll">
+<table>
+<caption>Rúbrica académica original · laboratorio 15</caption>
+<thead>
+<tr>
+<th scope="col">Criterio</th>
+<th scope="col">Peso</th>
+<th scope="col">Alcance del trabajo presentado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">CID de artefacto sin datos personales generado</th>
+<td>20%</td>
+<td>CIDv1 raw calculado localmente sobre el JSON incluido.</td>
+</tr>
+<tr>
+<th scope="row">Pin activo en Pinata o servicio equivalente</th>
+<td>20%</td>
+<td>Procedimiento y modelo ilustrativo; pin remoto no ejecutado.</td>
+</tr>
+<tr>
+<th scope="row">Resolución mediante gateway HTTP</th>
+<td>25%</td>
+<td>Respuesta de referencia; recuperación local comprobable, sin gateway remoto.</td>
+</tr>
+<tr>
+<th scope="row">STORAGE.md con clasificación de datos y políticas de almacenamiento</th>
+<td>25%</td>
+<td>Documento incluido con sensibilidad, durabilidad y responsables.</td>
+</tr>
+<tr>
+<th scope="row">Comentarios de aprendizaje</th>
+<td>10%</td>
+<td>Párrafo desarrollado en primera persona del plural.</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<th scope="row">Total</th>
+<td>100%</td>
+<td>Las simulaciones se identifican y no acreditan ejecuciones externas.</td>
+</tr>
+</tfoot>
+</table>
+</div>
+<p class="note">Restricciones aplicadas: contenido de prueba, ausencia de secretos y atribución explícita de resultados. No se proporcionó texto adicional de penalizaciones; no asignamos deducciones ni sanciones inventadas.</p>
+</section>
+<section id="conclusiones" class="report-section " aria-labelledby="conclusiones-title">
+<div class="section-heading">
+<span class="section-index">conclusiones</span>
+<h2 id="conclusiones-title">Conclusiones</h2>
+</div>
+<ol class="conclusions">
+<li>La identidad por contenido depende de bytes y representación. El experimento con dos versiones demuestra por qué un cambio mínimo modifica el CID y por qué los parámetros de importación deben documentarse.</li>
+<li>El CID identifica, mientras que el pinning conserva. Separar ambas funciones evita interpretar un identificador válido como garantía de una descarga disponible o de permanencia ilimitada.</li>
+<li>Una recuperación necesita comprobar transporte e integridad. La comparación local reproduce la segunda comprobación sin atribuir al gateway una operación que no se realizó.</li>
+<li>La política del venture determina qué puede publicarse. Seleccionar contenidos estables y no sensibles reduce riesgos que ninguna promesa de eliminación distribuida puede resolver.</li>
+</ol>
+</section>
+<section id="aprendizajes" class="report-section " aria-labelledby="aprendizajes-title">
+<div class="section-heading">
+<span class="section-index">aprendizajes</span>
+<h2 id="aprendizajes-title">Aprendizajes</h2>
+</div>
+<p>Aprendimos a relacionar bytes, hashing y direccionamiento por contenido, y comprendimos que disponibilidad y persistencia requieren decisiones operativas adicionales. Al elaborar STORAGE.md reconocimos que la clasificación de datos debe preceder a la publicación y que retirar un pin no elimina las copias distribuidas.</p>
+</section>
+<section id="documentacion" class="report-section " aria-labelledby="documentacion-title">
+<div class="section-heading">
+<span class="section-index">documentacion</span>
+<h2 id="documentacion-title">Documentación y fuentes</h2>
+</div>
+<a class="doc-link" href="README.md">Leer el README del laboratorio 15 ↗</a>
+<a class="doc-link" href="STORAGE.md">Consultar STORAGE.md ↗</a>
+<a class="doc-link" href="venture-hello.json" download>Descargar venture-hello.json ↓</a>
+<p>Las referencias fundamentan los protocolos y las declaraciones atribuidas. Los cálculos locales, modelos didácticos y límites de observación se explican junto a cada resultado.</p>
+<ul class="sources">
+<li>
+<a href="https://docs.ipfs.tech/concepts/content-addressing/" target="_blank" rel="noopener noreferrer">IPFS · identificadores de contenido ↗</a>
+</li>
+<li>
+<a href="https://docs.ipfs.tech/concepts/persistence/" target="_blank" rel="noopener noreferrer">IPFS · persistencia y pinning ↗</a>
+</li>
+<li>
+<a href="https://docs.pinata.cloud/files/uploading-files" target="_blank" rel="noopener noreferrer">Pinata · carga de archivos ↗</a>
+</li>
+<li>
+<a href="https://github.com/multiformats/cid" target="_blank" rel="noopener noreferrer">Multiformats · especificación CID ↗</a>
+</li>
+</ul>
+</section>
+</div>
+</div>
+</main>
+<footer class="site-footer">
+<a href="../index.html">← Colección Web3 Labs</a>
+<p>Laboratorio 15 · IPFS + Pinata · Sesión 18</p>
+<a href="#">Volver al inicio ↑</a>
+</footer>
+</body>
+</html>
